@@ -1,0 +1,344 @@
+{
+  "designSystem": {
+    "name": "AI Chat Interface Design System",
+    "version": "1.0.0",
+    "description": "A modern, minimal design system for AI chat interfaces with dark theme aesthetics",
+    
+    "colorPalette": {
+      "primary": {
+        "background": "#1a1a1a",
+        "surface": "#2a2a2a",
+        "surfaceElevated": "#333333"
+      },
+      "text": {
+        "primary": "#ffffff",
+        "secondary": "#b0b0b0",
+        "muted": "#888888",
+        "accent": "#8b5cf6"
+      },
+      "interactive": {
+        "hover": "#404040",
+        "focus": "#4a4a4a",
+        "active": "#555555"
+      },
+      "semantic": {
+        "success": "#10b981",
+        "warning": "#f59e0b",
+        "error": "#ef4444",
+        "info": "#3b82f6"
+      }
+    },
+
+    "typography": {
+      "fontFamily": {
+        "primary": "Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
+        "monospace": "'SF Mono', Monaco, 'Cascadia Code', monospace"
+      },
+      "fontSizes": {
+        "xs": "12px",
+        "sm": "14px",
+        "base": "16px",
+        "lg": "18px",
+        "xl": "20px",
+        "2xl": "24px",
+        "3xl": "32px"
+      },
+      "fontWeights": {
+        "normal": 400,
+        "medium": 500,
+        "semibold": 600,
+        "bold": 700
+      },
+      "lineHeights": {
+        "tight": 1.2,
+        "normal": 1.5,
+        "relaxed": 1.7
+      }
+    },
+
+    "spacing": {
+      "xs": "4px",
+      "sm": "8px",
+      "md": "16px",
+      "lg": "24px",
+      "xl": "32px",
+      "2xl": "48px",
+      "3xl": "64px"
+    },
+
+    "borderRadius": {
+      "none": "0px",
+      "sm": "4px",
+      "md": "8px",
+      "lg": "12px",
+      "xl": "16px",
+      "full": "9999px"
+    },
+
+    "shadows": {
+      "sm": "0 1px 2px rgba(0, 0, 0, 0.1)",
+      "md": "0 4px 6px rgba(0, 0, 0, 0.1)",
+      "lg": "0 10px 15px rgba(0, 0, 0, 0.1)",
+      "xl": "0 20px 25px rgba(0, 0, 0, 0.15)"
+    },
+
+    "layout": {
+      "structure": {
+        "type": "fullscreen",
+        "orientation": "vertical",
+        "sections": [
+          {
+            "name": "header",
+            "height": "auto",
+            "position": "top",
+            "sticky": true
+          },
+          {
+            "name": "main",
+            "height": "flex-1",
+            "position": "center",
+            "scrollable": true
+          },
+          {
+            "name": "input",
+            "height": "auto",
+            "position": "bottom",
+            "sticky": true
+          }
+        ]
+      },
+      "maxWidth": "none",
+      "padding": {
+        "container": "16px",
+        "content": "24px"
+      },
+      "breakpoints": {
+        "sm": "640px",
+        "md": "768px",
+        "lg": "1024px",
+        "xl": "1280px"
+      }
+    },
+
+    "components": {
+      "header": {
+        "structure": "horizontal-flex",
+        "padding": "12px 16px",
+        "backgroundColor": "primary.background",
+        "borderBottom": "1px solid #333",
+        "elements": [
+          {
+            "type": "hamburger-menu",
+            "position": "left",
+            "size": "24px",
+            "color": "text.primary"
+          },
+          {
+            "type": "brand-logo",
+            "position": "left",
+            "fontWeight": "semibold",
+            "fontSize": "lg",
+            "color": "text.primary"
+          },
+          {
+            "type": "version-indicator",
+            "position": "left",
+            "fontSize": "sm",
+            "color": "text.secondary"
+          },
+          {
+            "type": "action-buttons",
+            "position": "right",
+            "gap": "8px"
+          }
+        ]
+      },
+
+      "mainContent": {
+        "structure": "centered-content",
+        "maxWidth": "800px",
+        "margin": "0 auto",
+        "padding": "48px 24px",
+        "minHeight": "100vh",
+        "display": "flex",
+        "flexDirection": "column",
+        "justifyContent": "center",
+        "elements": [
+          {
+            "type": "welcome-message",
+            "textAlign": "center",
+            "fontSize": "2xl",
+            "fontWeight": "medium",
+            "color": "text.accent",
+            "marginBottom": "32px"
+          }
+        ]
+      },
+
+      "inputArea": {
+        "structure": "bottom-sticky",
+        "backgroundColor": "primary.background",
+        "padding": "16px",
+        "borderTop": "1px solid #333",
+        "elements": [
+          {
+            "type": "input-container",
+            "maxWidth": "800px",
+            "margin": "0 auto",
+            "position": "relative"
+          },
+          {
+            "type": "text-input",
+            "backgroundColor": "primary.surface",
+            "border": "1px solid #404040",
+            "borderRadius": "lg",
+            "padding": "12px 48px 12px 16px",
+            "fontSize": "base",
+            "color": "text.primary",
+            "placeholder": {
+              "color": "text.muted",
+              "text": "Ask [AI Name]..."
+            }
+          },
+          {
+            "type": "action-buttons",
+            "position": "input-right",
+            "gap": "8px",
+            "elements": ["attachment", "canvas", "voice"]
+          }
+        ]
+      },
+
+      "buttons": {
+        "primary": {
+          "backgroundColor": "text.accent",
+          "color": "white",
+          "padding": "8px 16px",
+          "borderRadius": "md",
+          "fontSize": "sm",
+          "fontWeight": "medium",
+          "border": "none",
+          "cursor": "pointer",
+          "transition": "all 0.2s ease",
+          "hover": {
+            "backgroundColor": "#7c3aed"
+          }
+        },
+        "secondary": {
+          "backgroundColor": "transparent",
+          "color": "text.secondary",
+          "padding": "8px 12px",
+          "borderRadius": "md",
+          "fontSize": "sm",
+          "border": "1px solid #404040",
+          "cursor": "pointer",
+          "transition": "all 0.2s ease",
+          "hover": {
+            "backgroundColor": "interactive.hover"
+          }
+        },
+        "icon": {
+          "width": "32px",
+          "height": "32px",
+          "backgroundColor": "transparent",
+          "color": "text.secondary",
+          "borderRadius": "md",
+          "border": "none",
+          "cursor": "pointer",
+          "display": "flex",
+          "alignItems": "center",
+          "justifyContent": "center",
+          "transition": "all 0.2s ease",
+          "hover": {
+            "backgroundColor": "interactive.hover"
+          }
+        }
+      },
+
+      "icons": {
+        "size": {
+          "sm": "16px",
+          "md": "20px",
+          "lg": "24px"
+        },
+        "style": "outline",
+        "strokeWidth": "1.5px",
+        "color": "text.secondary"
+      }
+    },
+
+    "interactions": {
+      "animations": {
+        "duration": {
+          "fast": "0.15s",
+          "normal": "0.2s",
+          "slow": "0.3s"
+        },
+        "easing": {
+          "default": "ease",
+          "in": "ease-in",
+          "out": "ease-out",
+          "inOut": "ease-in-out"
+        }
+      },
+      "hover": {
+        "transform": "none",
+        "transition": "all 0.2s ease"
+      },
+      "focus": {
+        "outline": "2px solid text.accent",
+        "outlineOffset": "2px"
+      }
+    },
+
+    "responsive": {
+      "mobile": {
+        "header": {
+          "padding": "8px 12px"
+        },
+        "mainContent": {
+          "padding": "24px 16px"
+        },
+        "inputArea": {
+          "padding": "12px"
+        }
+      },
+      "tablet": {
+        "mainContent": {
+          "padding": "32px 24px"
+        }
+      }
+    },
+
+    "accessibility": {
+      "focusIndicators": true,
+      "highContrast": true,
+      "keyboardNavigation": true,
+      "screenReader": {
+        "labels": true,
+        "landmarks": true,
+        "headingStructure": true
+      }
+    },
+
+    "designPrinciples": {
+      "minimalism": "Clean, uncluttered interface with focus on content",
+      "darkFirst": "Optimized for dark environments and reduced eye strain",
+      "conversational": "Natural, chat-like interaction patterns",
+      "responsive": "Seamless experience across all device sizes",
+      "accessible": "Inclusive design for all users",
+      "performant": "Fast, smooth interactions and animations"
+    },
+
+    "implementation": {
+      "framework": "React/Vue/Angular compatible",
+      "styling": "CSS-in-JS, Tailwind CSS, or CSS Modules",
+      "stateManagement": "Required for chat history and user preferences",
+      "themes": {
+        "support": true,
+        "default": "dark",
+        "alternatives": ["light", "auto"]
+      }
+    }
+  }
+}
