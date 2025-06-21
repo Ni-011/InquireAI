@@ -1,9 +1,17 @@
 import { useState, useRef } from 'react';
 
+export type SearchResult = {
+  title: string;
+  snippet: string;
+  link: string;
+};
+
 export type Message = {
   id: number;
   text: string;
   isUser: boolean;
+  searchResults?: SearchResult[];
+  searchQueries?: string[];
 };
 
 export function useChat() {
@@ -53,8 +61,19 @@ export function useChat() {
       });
       
       const data = await res.json();
+      
+      if (!res.ok) {
+        throw new Error(data.error || 'Failed to get response');
+      }
+      
       const aiId = Date.now() + 1;
-      const aiMsg: Message = { id: aiId, text: "", isUser: false };
+      const aiMsg: Message = { 
+        id: aiId, 
+        text: "", 
+        isUser: false,
+        searchResults: data.searchResults || undefined,
+        searchQueries: data.searchQueries || undefined
+      };
       
       setMessages(prev => [...prev, aiMsg]);
       typeText(data.response, aiId);
@@ -62,7 +81,7 @@ export function useChat() {
       setIsLoading(false);
       const errorMsg: Message = { 
         id: Date.now() + 1, 
-        text: "Sorry, something went wrong. Please try again.", 
+        text: `Sorry, something went wrong: ${error instanceof Error ? error.message : 'Unknown error'}. Please try again.`, 
         isUser: false 
       };
       setMessages(prev => [...prev, errorMsg]);

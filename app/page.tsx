@@ -36,6 +36,8 @@ export default function Home() {
                     text={msg.text}
                     isUser={msg.isUser}
                     isTyping={typingId === msg.id}
+                    searchResults={msg.searchResults}
+                    searchQueries={msg.searchQueries}
                   />
                 ))}
                 {isLoading && <LoadingBubble />}
