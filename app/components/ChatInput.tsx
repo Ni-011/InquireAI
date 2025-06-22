@@ -35,7 +35,7 @@ export default function ChatInput({
           onKeyPress={handleKeyPress}
           placeholder="Ask InquireAI"
           disabled={disabled}
-          className="w-full h-20 bg-gray-900/50 border-gray-800 rounded-2xl pl-16 pr-36 !text-lg placeholder:text-lg text-white placeholder-gray-500 focus:ring-0 focus:outline-none focus:border-gray-800 focus:shadow-none focus:bg-gray-900/70 transition-all duration-200 focus-visible:ring-0 focus-visible:ring-offset-0"
+          className="w-full h-20 bg-gray-900/50 border-gray-800 rounded-2xl pl-16 pr-72 !text-lg placeholder:text-lg text-white placeholder-gray-500 focus:ring-0 focus:outline-none focus:border-gray-800 focus:shadow-none focus:bg-gray-900/70 transition-all duration-200 focus-visible:ring-0 focus-visible:ring-offset-0"
         />
 
         <label htmlFor="file-upload" className="absolute left-4 top-1/2 -translate-y-1/2 cursor-pointer">
@@ -48,7 +48,7 @@ export default function ChatInput({
         <Button
           size="sm"
           variant="ghost"
-          className="absolute right-16 top-1/2 transform -translate-y-1/2 text-base text-gray-500 hover:text-white hover:bg-gray-800 rounded-xl px-4 h-11"
+          className="absolute right-20 top-1/2 transform -translate-y-1/2 text-base text-gray-500 hover:text-gray-300 bg-gray-900/30 hover:bg-gray-800/50 rounded-xl px-4 h-11"
         >
           <Search className="h-5 w-5 mr-2" />
           Deep Research

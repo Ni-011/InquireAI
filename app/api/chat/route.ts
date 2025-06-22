@@ -106,7 +106,7 @@ export async function POST(request: NextRequest) {
 
     const apiKey = process.env.GEMINI_API_KEY;
     const searchApiKey = process.env.SEARCH_API_KEY;
-    const searchEngineId = process.env.SEARCH_ENGINE_ID || '017576662512468239146:omuauf_lfve';
+    const searchEngineId = process.env.SEARCH_ENGINE_ID || 'f1e246445d02d4e5c';
     
     console.log('🔑 API Keys status:');
     console.log('  - Gemini API Key:', !!apiKey ? '✅ Present' : '❌ Missing');
