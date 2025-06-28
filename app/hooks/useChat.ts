@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react';
+import { useState, useCallback } from 'react';
 
 export type SearchResult = {
   title: string;
@@ -12,41 +12,60 @@ export type Message = {
   isUser: boolean;
   searchResults?: SearchResult[];
   searchQueries?: string[];
+  isTyping?: boolean;
+};
+
+export type ChatResponse = {
+  response: string;
+  searchResults?: SearchResult[];
+  searchQueries?: string[];
+  searchesRemaining?: number;
+  isDeepSearch?: boolean;
 };
 
 export function useChat() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [isLoading, setIsLoading] = useState(false);
-  const [typingId, setTypingId] = useState<number | null>(null);
-  const intervalRef = useRef<NodeJS.Timeout | null>(null);
+  const [searchesRemaining, setSearchesRemaining] = useState<number | null>(null);
+  const [typingMessageId, setTypingMessageId] = useState<number | null>(null);
 
-  const typeText = (fullText: string, messageId: number) => {
-    let i = 0;
-    setIsLoading(false);
-    setTypingId(messageId);
+  const typeMessage = useCallback((fullText: string, messageId: number, searchResults?: SearchResult[], searchQueries?: string[]) => {
+    setMessages(prev => prev.map(msg => 
+      msg.id === messageId 
+        ? { ...msg, searchResults, searchQueries }
+        : msg
+    ));
     
-    intervalRef.current = setInterval(() => {
-      i += 2;
-      setMessages(prev => prev.map(msg => 
-        msg.id === messageId ? { ...msg, text: fullText.substring(0, i) } : msg
-      ));
-      
-      if (i >= fullText.length) {
-        clearInterval(intervalRef.current!);
-        setTypingId(null);
+    const words = fullText.split(' ');
+    let currentIndex = 0;
+    
+    const typeNextChunk = () => {
+      if (currentIndex >= words.length) {
+        setMessages(prev => prev.map(msg => 
+          msg.id === messageId 
+            ? { ...msg, isTyping: false }
+            : msg
+        ));
+        setTypingMessageId(null);
+        return;
       }
-    }, 5);
-  };
 
-  const stopTyping = () => {
-    if (intervalRef.current) {
-      clearInterval(intervalRef.current);
-      setTypingId(null);
-      setIsLoading(false);
-    }
-  };
+      const chunkSize = Math.min(Math.floor(Math.random() * 3) + 2, words.length - currentIndex);
+      
+      setMessages(prev => prev.map(msg => 
+        msg.id === messageId 
+          ? { ...msg, text: words.slice(0, currentIndex + chunkSize).join(' ') }
+          : msg
+      ));
 
-  const sendMessage = async (input: string) => {
+      currentIndex += chunkSize;
+      setTimeout(typeNextChunk, Math.random() * 20 + 20);
+    };
+
+    typeNextChunk();
+  }, []);
+
+  const sendMessage = async (input: string, isGuest: boolean = false, isDeepSearch: boolean = false) => {
     if (!input.trim()) return;
     
     const userMsg: Message = { id: Date.now(), text: input, isUser: true };
@@ -54,45 +73,60 @@ export function useChat() {
     setIsLoading(true);
 
     try {
-      const res = await fetch('/api/chat', {
+      const token = localStorage.getItem('token');
+      const response = await fetch('/api/chat', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ message: input }),
+        headers: { 
+          'Content-Type': 'application/json',
+          ...(token && !isGuest ? { 'Authorization': `Bearer ${token}` } : {})
+        },
+        body: JSON.stringify({ 
+          message: input,
+          isGuest: isGuest,
+          isDeepSearch: isDeepSearch
+        }),
       });
       
-      const data = await res.json();
+      const data = await response.json();
       
-      if (!res.ok) {
+      if (!response.ok) {
         throw new Error(data.error || 'Failed to get response');
       }
       
-      const aiId = Date.now() + 1;
+      if (typeof data.searchesRemaining === 'number') {
+        setSearchesRemaining(data.searchesRemaining);
+      }
+      
+      const aiMsgId = Date.now() + 1;
       const aiMsg: Message = { 
-        id: aiId, 
-        text: "", 
+        id: aiMsgId, 
+        text: '', 
         isUser: false,
-        searchResults: data.searchResults || undefined,
-        searchQueries: data.searchQueries || undefined
+        isTyping: true
       };
       
       setMessages(prev => [...prev, aiMsg]);
-      typeText(data.response, aiId);
-    } catch (error) {
       setIsLoading(false);
+      setTypingMessageId(aiMsgId);
+      
+      typeMessage(data.response, aiMsgId, data.searchResults, data.searchQueries);
+      
+    } catch (error) {
       const errorMsg: Message = { 
         id: Date.now() + 1, 
-        text: `Sorry, something went wrong: ${error instanceof Error ? error.message : 'Unknown error'}. Please try again.`, 
+        text: `Error: ${error instanceof Error ? error.message : 'Unknown error'}. Please try again.`, 
         isUser: false 
       };
       setMessages(prev => [...prev, errorMsg]);
+      setIsLoading(false);
     }
   };
 
   return {
     messages,
     isLoading,
-    typingId,
     sendMessage,
-    stopTyping,
+    searchesRemaining,
+    isTyping: typingMessageId !== null,
   };
 } 

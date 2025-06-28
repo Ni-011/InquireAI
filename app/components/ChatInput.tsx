@@ -6,6 +6,7 @@ interface ChatInputProps {
   input: string;
   onInputChange: (value: string) => void;
   onSend: () => void;
+  onDeepSearch?: () => void;
   onStop: () => void;
   isTyping: boolean;
   disabled?: boolean;
@@ -15,6 +16,7 @@ export default function ChatInput({
   input, 
   onInputChange, 
   onSend, 
+  onDeepSearch, 
   onStop, 
   isTyping, 
   disabled 
@@ -46,9 +48,11 @@ export default function ChatInput({
         </label>
 
         <Button
+          onClick={onDeepSearch}
+          disabled={disabled}
           size="sm"
           variant="ghost"
-          className="absolute right-20 top-1/2 transform -translate-y-1/2 text-base text-gray-500 hover:text-gray-300 bg-gray-900/30 hover:bg-gray-800/50 rounded-xl px-4 h-11"
+          className="absolute right-20 top-1/2 transform -translate-y-1/2 text-base text-gray-500 hover:text-gray-300 bg-gray-900/30 hover:bg-gray-800/50 rounded-xl px-4 h-11 disabled:opacity-30"
         >
           <Search className="h-5 w-5 mr-2" />
           Deep Research

@@ -1,264 +1,180 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { verifyToken, checkSearchLimit, incrementSearchCount } from '@/lib/auth';
 
-// Function to search Google using Custom Search API
-async function searchGoogle(query: string, apiKey: string, searchEngineId: string) {
+async function searchGoogle(query: string, apiKey: string, searchEngineId: string, numResults: number = 5) {
   try {
-    const searchUrl = `https://www.googleapis.com/customsearch/v1?key=${apiKey}&cx=${searchEngineId}&q=${encodeURIComponent(query)}&num=5`;
-    
-    console.log(`🔍 Searching Google for: "${query}"`);
-    console.log(`📡 Search URL: ${searchUrl.replace(apiKey, 'API_KEY_HIDDEN')}`);
-    
-    const response = await fetch(searchUrl);
-    
-    console.log(`📊 Google API Response Status: ${response.status} ${response.statusText}`);
+    const url = `https://www.googleapis.com/customsearch/v1?key=${apiKey}&cx=${searchEngineId}&q=${encodeURIComponent(query)}&num=${numResults}`;
+    const response = await fetch(url);
     
     if (!response.ok) {
-      const errorText = await response.text();
-      console.error('❌ Google Search API error:', response.status, response.statusText);
-      console.error('❌ Error details:', errorText);
-      return null;
+      return [];
     }
     
     const data = await response.json();
-    console.log(`✅ Google API returned ${data.items?.length || 0} results for query: "${query}"`);
-    
-    if (data.items && data.items.length > 0) {
-      console.log('📋 Search results preview:');
-      data.items.slice(0, 2).forEach((item: any, index: number) => {
-        console.log(`  ${index + 1}. ${item.title}`);
-        console.log(`     ${item.snippet?.substring(0, 100)}...`);
-      });
-    } else {
-      console.log('⚠️ No search results found');
-    }
-    
     return data.items || [];
   } catch (error) {
-    console.error('💥 Error searching Google:', error);
-    return null;
+    console.error('Search error:', error);
+    return [];
   }
 }
 
-// Function to call Gemini API
-async function callGeminiAPI(prompt: string, apiKey: string, step: string) {
+async function callGemini(prompt: string, apiKey: string) {
   try {
-    console.log(`🤖 Calling Gemini API for: ${step}`);
-    console.log(`📝 Prompt length: ${prompt.length} characters`);
-    
     const response = await fetch(
       `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`,
       {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          contents: [
-            {
-              parts: [
-                {
-                  text: prompt,
-                },
-              ],
-            },
-          ],
+          contents: [{ parts: [{ text: prompt }] }]
         }),
       }
     );
 
-    console.log(`📊 Gemini API Response Status: ${response.status} ${response.statusText}`);
-
-    if (!response.ok) {
-      const errorText = await response.text();
-      console.error(`❌ Gemini API error for ${step}:`, response.status, response.statusText);
-      console.error('❌ Error details:', errorText);
-      throw new Error(`Gemini API error: ${response.statusText}`);
-    }
-
+    if (!response.ok) throw new Error(`Gemini API error: ${response.statusText}`);
     const data = await response.json();
-    const result = data.candidates?.[0]?.content?.parts?.[0]?.text || null;
-    
-    console.log(`✅ Gemini API response for ${step}: ${result ? 'Success' : 'Empty'}`);
-    if (result) {
-      console.log(`📄 Response preview: ${result.substring(0, 200)}...`);
-    }
-    
-    return result;
+    return data.candidates?.[0]?.content?.parts?.[0]?.text || null;
   } catch (error) {
-    console.error(`💥 Error calling Gemini API for ${step}:`, error);
+    console.error('Gemini error:', error);
     throw error;
   }
 }
 
 export async function POST(request: NextRequest) {
   try {
-    const { message } = await request.json();
-    console.log('\n🚀 === NEW CHAT REQUEST ===');
-    console.log('📨 Received message:', message);
-
+    const { message, isGuest, isDeepSearch } = await request.json();
     if (!message) {
-      console.log('❌ No message provided');
-      return NextResponse.json(
-        { error: 'Message is required' },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: 'Message is required' }, { status: 400 });
     }
 
+    let user = null;
+    let remainingSearches = 0;
+
+    if (!isGuest) {
+      // Auth check for logged-in users
+      const authHeader = request.headers.get('authorization');
+      if (!authHeader?.startsWith('Bearer ')) {
+        return NextResponse.json({ error: 'Authentication required' }, { status: 401 });
+      }
+
+      const token = authHeader.substring(7);
+      user = verifyToken(token);
+      if (!user) {
+        return NextResponse.json({ error: 'Invalid token' }, { status: 401 });
+      }
+
+      // Check search limit for logged-in users
+      const limitCheck = await checkSearchLimit(user.id);
+      if (!limitCheck.canSearch) {
+        return NextResponse.json({ 
+          error: `Daily search limit reached (7/7). Try again tomorrow!`, 
+          remaining: 0 
+        }, { status: 429 });
+      }
+      remainingSearches = limitCheck.remaining;
+    }
+
+    // Get API keys
     const apiKey = process.env.GEMINI_API_KEY;
     const searchApiKey = process.env.SEARCH_API_KEY;
     const searchEngineId = process.env.SEARCH_ENGINE_ID || 'f1e246445d02d4e5c';
     
-    console.log('🔑 API Keys status:');
-    console.log('  - Gemini API Key:', !!apiKey ? '✅ Present' : '❌ Missing');
-    console.log('  - Search API Key:', !!searchApiKey ? '✅ Present' : '❌ Missing');
-    console.log('  - Search Engine ID:', searchEngineId);
-    
-    if (!apiKey) {
-      console.log('❌ No Gemini API key found');
-      return NextResponse.json(
-        { error: 'Gemini API key not configured. Please set GEMINI_API_KEY environment variable.' },
-        { status: 500 }
-      );
+    if (!apiKey || !searchApiKey) {
+      return NextResponse.json({ error: 'API keys not configured' }, { status: 500 });
     }
 
-    if (!searchApiKey) {
-      console.log('❌ No Search API key found');
-      return NextResponse.json(
-        { error: 'Search API key not configured. Please set SEARCH_API_KEY environment variable.' },
-        { status: 500 }
-      );
-    }
+    // Enhanced date/time context
+    const now = new Date();
+    const currentDateTime = {
+      readable: now.toLocaleDateString('en-US', { 
+        weekday: 'long', 
+        year: 'numeric', 
+        month: 'long', 
+        day: 'numeric' 
+      }),
+      time: now.toLocaleTimeString('en-US', { 
+        hour: '2-digit', 
+        minute: '2-digit', 
+        timeZoneName: 'short' 
+      }),
+      year: now.getFullYear()
+    };
 
-    // STEP 1: Ask LLM what to search for
-    console.log('\n📋 === STEP 1: QUERY ANALYSIS ===');
-    const searchAnalysisPrompt = `Analyze the following user question and determine what specific search queries would be most helpful to answer it comprehensively.
+    // Generate search queries with enhanced context
+    const searchPrompt = isDeepSearch
+      ? `Current date: ${currentDateTime.readable}, ${currentDateTime.time}
 
-User Question: "${message}"
+Research topic: "${message}"
 
-Please provide 3-5 specific search queries that would help gather the most relevant and up-to-date information to answer this question. Format your response as a simple list, one search query per line, without any additional text or formatting. Focus on:
-- Current/recent information if the question involves time-sensitive topics
-- Multiple perspectives or sources for controversial topics  
-- Technical details for how-to questions
-- Factual data for informational questions
+Generate 4-5 targeted search queries for comprehensive research. For current events include terms like "latest", "breaking", "current", "${currentDateTime.year}". Provide only the search queries, one per line.`
+      : `Current date: ${currentDateTime.readable}, ${currentDateTime.time}
 
-Example format:
-current weather New York today
-New York weather forecast
-NYC temperature humidity`;
+Query: "${message}"
 
-    const searchQueries = await callGeminiAPI(searchAnalysisPrompt, apiKey, 'Query Analysis');
-    if (!searchQueries) {
-      throw new Error('Failed to analyze search requirements');
-    }
+Generate 3-4 targeted search queries for recent information. For news/events include "latest", "breaking", "current", "${currentDateTime.year}". Provide only the search queries, one per line.`;
 
-    console.log('🎯 Raw search queries from AI:', searchQueries);
+    const searchQueries = await callGemini(searchPrompt, apiKey);
+    if (!searchQueries) throw new Error('Failed to generate search queries');
 
-    // Parse the search queries from LLM response
+    // Parse queries
     const queries = searchQueries.split('\n')
       .map((q: string) => q.trim())
-      .filter((q: string) => q.length > 0 && !q.startsWith('Example') && !q.includes('format'))
-      .slice(0, 5); // Limit to 5 queries max
+      .filter((q: string) => q.length > 0 && !q.includes('Example') && !q.includes('format'))
+      .map((q: string) => q.replace(/^["']|["']$/g, ''))
+      .slice(0, isDeepSearch ? 10 : 4);
 
-    console.log('✅ Parsed search queries:', queries);
-    console.log(`📊 Total queries to execute: ${queries.length}`);
-
-    // STEP 2: Perform all searches
-    console.log('\n🌐 === STEP 2: WEB SEARCH EXECUTION ===');
-    const allSearchResults = [];
-    
-    for (let i = 0; i < queries.length; i++) {
-      const query = queries[i];
-      console.log(`\n🔍 Executing search ${i + 1}/${queries.length}: "${query}"`);
-      
-      const results = await searchGoogle(query, searchApiKey, searchEngineId);
-      if (results && results.length > 0) {
-        const topResults = results.slice(0, 3); // Top 3 results per query
-        allSearchResults.push(...topResults);
-        console.log(`✅ Added ${topResults.length} results from this search`);
-      } else {
-        console.log('⚠️ No results from this search');
+    // Perform searches with more results per query
+    const allResults = [];
+    for (const query of queries) {
+      const results = await searchGoogle(query, searchApiKey, searchEngineId, isDeepSearch ? 15 : 10);
+      if (results.length > 0) {
+        allResults.push(...results.slice(0, isDeepSearch ? 10 : 8));
       }
     }
 
-    console.log(`\n📊 SEARCH SUMMARY:`);
-    console.log(`  - Total searches performed: ${queries.length}`);
-    console.log(`  - Total results collected: ${allSearchResults.length}`);
+    // Build search context
+    const searchContext = allResults.map((result, index) => 
+      `[${index + 1}] ${result.title}\n${result.snippet}\nSource: ${result.link}\n`
+    ).join('\n');
 
-    if (allSearchResults.length === 0) {
-      console.log('❌ WARNING: No search results found at all!');
-    } else {
-      console.log('📋 Sample of collected results:');
-      allSearchResults.slice(0, 3).forEach((result: any, index: number) => {
-        console.log(`  ${index + 1}. ${result.title}`);
-        console.log(`     Snippet: ${result.snippet?.substring(0, 100)}...`);
-        console.log(`     URL: ${result.link}`);
-      });
-    }
+    // Generate final response with enhanced context
+    const finalPrompt = isDeepSearch
+      ? `Current date: ${currentDateTime.readable}, ${currentDateTime.time}
 
-    // STEP 3: Generate final answer with search context
-    console.log('\n🤖 === STEP 3: AI RESPONSE GENERATION ===');
-    
-    let searchContext = '';
-    if (allSearchResults.length > 0) {
-      searchContext = allSearchResults.map((result: any, index: number) => 
-        `[${index + 1}] ${result.title}
-${result.snippet}
-Source: ${result.link}
-`
-      ).join('\n');
-      
-      console.log(`📄 Search context length: ${searchContext.length} characters`);
-      console.log('📋 Search context preview:');
-      console.log(searchContext.substring(0, 500) + '...');
-    } else {
-      console.log('⚠️ No search context available - proceeding with AI knowledge only');
-    }
+Request: "${message}"
 
-    const finalPrompt = `You are an AI assistant tasked with answering a user's question using both your knowledge and current web search results.
-
-User Question: "${message}"
-
-Web Search Results:
+Search Results:
 ${searchContext}
 
-Instructions:
-1. Provide a comprehensive, accurate answer to the user's question
-2. Integrate information from the search results when relevant and current
-3. Always cite your sources using [number] format when referencing search results
-4. If search results contradict each other, acknowledge this and explain the different perspectives
-5. If the search results don't contain relevant information, rely on your general knowledge but mention this
-6. Be conversational but informative
-7. Structure your response clearly with proper formatting
+Provide a comprehensive research report with Executive Summary, Current Status, Analysis, Key Findings, and Conclusion. Prioritize recent information and cite sources using [number] format.`
+      : `Current date: ${currentDateTime.readable}, ${currentDateTime.time}
 
-Please provide your response now:`;
+Question: "${message}"
 
-    console.log(`📝 Final prompt length: ${finalPrompt.length} characters`);
+Search Results:
+${searchContext}
 
-    const finalResponse = await callGeminiAPI(finalPrompt, apiKey, 'Final Response');
-    if (!finalResponse) {
-      throw new Error('Failed to generate final response');
+Provide a comprehensive answer prioritizing recent information. For news/events, emphasize current developments. Cite sources using [number] format and be specific about timing.`;
+
+    const finalResponse = await callGemini(finalPrompt, apiKey);
+    if (!finalResponse) throw new Error('Failed to generate response');
+
+    // Increment search count after successful search (only for logged-in users)
+    if (user) {
+      await incrementSearchCount(user.id);
+      const updatedLimit = await checkSearchLimit(user.id);
+      remainingSearches = updatedLimit.remaining;
     }
 
-    console.log('\n✅ === RESPONSE GENERATION COMPLETE ===');
-    console.log(`📊 Final response length: ${finalResponse.length} characters`);
-    console.log(`📋 Response preview: ${finalResponse.substring(0, 200)}...`);
-
-    // Return response with search results for display
-    const responseData = { 
+    return NextResponse.json({
       response: finalResponse,
-      searchResults: allSearchResults.slice(0, 6), // Return top 6 results for display
-      searchQueries: queries // Also return the queries that were used
-    };
-
-    console.log(`📤 Returning response with ${responseData.searchResults.length} search results and ${responseData.searchQueries.length} queries`);
-
-    return NextResponse.json(responseData);
+      searchResults: allResults.slice(0, isDeepSearch ? 20 : 12),
+      searchQueries: queries,
+      searchesRemaining: user ? remainingSearches : undefined
+    });
 
   } catch (error) {
-    console.error('\n💥 === ERROR IN CHAT API ===');
-    console.error('Error details:', error);
-    console.error('Stack trace:', error instanceof Error ? error.stack : 'No stack trace');
-    
+    console.error('Chat API error:', error);
     return NextResponse.json(
       { error: 'Failed to process request: ' + (error instanceof Error ? error.message : 'Unknown error') },
       { status: 500 }

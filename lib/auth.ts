@@ -1,13 +1,9 @@
-import { neon } from '@neondatabase/serverless';
-import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
+import bcrypt from 'bcryptjs';
+import { neon } from '@neondatabase/serverless';
 
-const JWT_SECRET = process.env.JWT_SECRET || 'your-jwt-secret-key';
-
-function getDb() {
-  if (!process.env.NEON_PASS) throw new Error('NEON_PASS required');
-  return neon(`postgresql://InquireDB_owner:${process.env.NEON_PASS}@ep-nameless-sun-a1ykbpqg-pooler.ap-southeast-1.aws.neon.tech/InquireDB?sslmode=require`);
-}
+const sql = neon(process.env.DATABASE_URL!);
+const JWT_SECRET = process.env.JWT_SECRET || 'fallback-secret-key';
 
 export interface User {
   id: string;
@@ -15,45 +11,8 @@ export interface User {
   name?: string;
 }
 
-// Auto-create table on first use
-async function ensureTable() {
-  const sql = getDb();
-  await sql`CREATE TABLE IF NOT EXISTS users (
-    id TEXT PRIMARY KEY DEFAULT gen_random_uuid()::text,
-    email VARCHAR(255) UNIQUE NOT NULL,
-    name VARCHAR(255),
-    password TEXT,
-    created_at TIMESTAMP DEFAULT NOW()
-  )`;
-}
-
-export async function register(email: string, password: string, name?: string): Promise<{ user: User; token: string }> {
-  await ensureTable();
-  const sql = getDb();
-  
-  const hashedPassword = await bcrypt.hash(password, 12);
-  const [user] = await sql`
-    INSERT INTO users (email, password, name)
-    VALUES (${email}, ${hashedPassword}, ${name})
-    RETURNING id, email, name
-  `;
-  
-  const userData = { id: user.id, email: user.email, name: user.name };
-  const token = jwt.sign(userData, JWT_SECRET, { expiresIn: '7d' });
-  
-  return { user: userData, token };
-}
-
-export async function login(email: string, password: string): Promise<{ user: User; token: string } | null> {
-  const sql = getDb();
-  const [user] = await sql`SELECT id, email, name, password FROM users WHERE email = ${email} LIMIT 1`;
-  
-  if (!user || !await bcrypt.compare(password, user.password)) return null;
-  
-  const userData = { id: user.id, email: user.email, name: user.name };
-  const token = jwt.sign(userData, JWT_SECRET, { expiresIn: '7d' });
-  
-  return { user: userData, token };
+export function generateToken(user: User): string {
+  return jwt.sign(user, JWT_SECRET, { expiresIn: '7d' });
 }
 
 export function verifyToken(token: string): User | null {
@@ -62,4 +21,60 @@ export function verifyToken(token: string): User | null {
   } catch {
     return null;
   }
+}
+
+export async function hashPassword(password: string): Promise<string> {
+  return bcrypt.hash(password, 12);
+}
+
+export async function verifyPassword(password: string, hashedPassword: string): Promise<boolean> {
+  return bcrypt.compare(password, hashedPassword);
+}
+
+export async function createUser(email: string, password: string, name?: string): Promise<User> {
+  const hashedPassword = await hashPassword(password);
+  const result = await sql`
+    INSERT INTO users (email, password, name) 
+    VALUES (${email}, ${hashedPassword}, ${name}) 
+    RETURNING id, email, name
+  `;
+  return result[0] as User;
+}
+
+export async function findUserByEmail(email: string): Promise<(User & { password: string }) | null> {
+  const result = await sql`
+    SELECT id, email, name, password 
+    FROM users 
+    WHERE email = ${email}
+  `;
+  return result[0] as (User & { password: string }) | null;
+}
+
+export async function checkSearchLimit(userId: string): Promise<{ canSearch: boolean; remaining: number }> {
+  const today = new Date().toISOString().split('T')[0];
+  
+  const result = await sql`
+    SELECT searches_used 
+    FROM user_search_limits 
+    WHERE user_id = ${userId} AND date = ${today}
+  `;
+  
+  const searchesUsed = result[0]?.searches_used || 0;
+  const dailyLimit = 7;
+  
+  return {
+    canSearch: searchesUsed < dailyLimit,
+    remaining: Math.max(0, dailyLimit - searchesUsed)
+  };
+}
+
+export async function incrementSearchCount(userId: string): Promise<void> {
+  const today = new Date().toISOString().split('T')[0];
+  
+  await sql`
+    INSERT INTO user_search_limits (user_id, date, searches_used)
+    VALUES (${userId}, ${today}, 1)
+    ON CONFLICT (user_id, date)
+    DO UPDATE SET searches_used = user_search_limits.searches_used + 1
+  `;
 } 
