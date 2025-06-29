@@ -19,10 +19,10 @@ export default function LoadingBubble() {
 
   return (
     <div className="flex justify-start">
-      <div className="bg-purple-900/20 border border-purple-800/20 rounded-2xl px-4 py-3">
+      <div className="bg-purple-900/20 border border-purple-800/20 rounded-xl sm:rounded-2xl px-3 sm:px-4 py-2 sm:py-3 max-w-[95%] sm:max-w-none">
         <div className="flex items-center space-x-2">
-          <div className="w-4 h-4 border-2 border-purple-400 border-t-transparent rounded-full animate-spin"></div>
-          <span className="text-sm text-gray-400">{messages[messageIndex]}</span>
+          <div className="w-3 h-3 sm:w-4 sm:h-4 border-2 border-purple-400 border-t-transparent rounded-full animate-spin flex-shrink-0"></div>
+          <span className="text-xs sm:text-sm text-gray-400">{messages[messageIndex]}</span>
         </div>
       </div>
     </div>

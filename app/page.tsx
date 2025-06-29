@@ -75,14 +75,14 @@ function AuthForm({ onLogin }: { onLogin: (user: User, token: string) => void })
 
   return (
     <div className="min-h-screen bg-black flex items-center justify-center p-4">
-      <div className="w-full max-w-md bg-slate-800/60 backdrop-blur-sm border-slate-700/50 shadow-2xl rounded-lg p-8">
-        <div className="space-y-1 text-center pb-8">
-          <h2 className="text-2xl font-semibold tracking-tight">
+      <div className="w-full max-w-md bg-slate-800/60 backdrop-blur-sm border-slate-700/50 shadow-2xl rounded-lg p-6 sm:p-8">
+        <div className="space-y-1 text-center pb-6 sm:pb-8">
+          <h2 className="text-xl sm:text-2xl font-semibold tracking-tight">
             <span className="bg-gradient-to-r from-blue-300 via-purple-300 to-indigo-300 bg-clip-text text-transparent">
               {isLogin ? "Welcome back" : "Create account"}
             </span>
           </h2>
-          <p className="text-slate-400 text-sm">
+          <p className="text-slate-400 text-xs sm:text-sm">
             {isLogin ? "Enter your credentials to access your account" : "Enter your information to create your account"}
           </p>
         </div>
@@ -95,44 +95,44 @@ function AuthForm({ onLogin }: { onLogin: (user: User, token: string) => void })
           )}
           <form onSubmit={handleSubmit} className="space-y-5">
             {!isLogin && (
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                 <div className="space-y-2">
-                  <label htmlFor="firstName" className="text-slate-200 text-sm font-medium">First name</label>
+                  <label htmlFor="firstName" className="text-slate-200 text-xs sm:text-sm font-medium">First name</label>
                   <input 
                     id="firstName" 
                     value={form.firstName} 
                     onChange={handleChange} 
                     placeholder="John" 
-                    className="w-full p-3 bg-slate-800/80 border border-slate-600/50 text-slate-100 placeholder:text-slate-500 focus:border-purple-400/30 focus:ring-1 focus:ring-purple-400/10 transition-all duration-200 rounded-md outline-none" 
+                    className="w-full p-2.5 sm:p-3 bg-slate-800/80 border border-slate-600/50 text-slate-100 placeholder:text-slate-500 focus:border-purple-400/30 focus:ring-1 focus:ring-purple-400/10 transition-all duration-200 rounded-md outline-none text-sm" 
                   />
                 </div>
                 <div className="space-y-2">
-                  <label htmlFor="lastName" className="text-slate-200 text-sm font-medium">Last name</label>
+                  <label htmlFor="lastName" className="text-slate-200 text-xs sm:text-sm font-medium">Last name</label>
                   <input 
                     id="lastName" 
                     value={form.lastName} 
                     onChange={handleChange} 
                     placeholder="Doe" 
-                    className="w-full p-3 bg-slate-800/80 border border-slate-600/50 text-slate-100 placeholder:text-slate-500 focus:border-purple-400/30 focus:ring-1 focus:ring-purple-400/10 transition-all duration-200 rounded-md outline-none" 
+                    className="w-full p-2.5 sm:p-3 bg-slate-800/80 border border-slate-600/50 text-slate-100 placeholder:text-slate-500 focus:border-purple-400/30 focus:ring-1 focus:ring-purple-400/10 transition-all duration-200 rounded-md outline-none text-sm" 
                   />
                 </div>
               </div>
             )}
 
             <div className="space-y-2">
-              <label htmlFor="email" className="text-slate-200 text-sm font-medium">Email address</label>
+              <label htmlFor="email" className="text-slate-200 text-xs sm:text-sm font-medium">Email address</label>
               <input 
                 id="email" 
                 type="email" 
                 value={form.email} 
                 onChange={handleChange} 
                 placeholder="john@company.com" 
-                className="w-full p-3 bg-slate-800/80 border border-slate-600/50 text-slate-100 placeholder:text-slate-500 focus:border-purple-400/30 focus:ring-1 focus:ring-purple-400/10 transition-all duration-200 rounded-md outline-none" 
+                className="w-full p-2.5 sm:p-3 bg-slate-800/80 border border-slate-600/50 text-slate-100 placeholder:text-slate-500 focus:border-purple-400/30 focus:ring-1 focus:ring-purple-400/10 transition-all duration-200 rounded-md outline-none text-sm" 
               />
             </div>
 
             <div className="space-y-2">
-              <label htmlFor="password" className="text-slate-200 text-sm font-medium">Password</label>
+              <label htmlFor="password" className="text-slate-200 text-xs sm:text-sm font-medium">Password</label>
               <div className="relative">
                 <input 
                   id="password" 
@@ -140,11 +140,11 @@ function AuthForm({ onLogin }: { onLogin: (user: User, token: string) => void })
                   value={form.password} 
                   onChange={handleChange} 
                   placeholder="Enter your password" 
-                  className="w-full p-3 bg-slate-800/80 border border-slate-600/50 text-slate-100 placeholder:text-slate-500 focus:border-purple-400/30 focus:ring-1 focus:ring-purple-400/10 pr-10 transition-all duration-200 rounded-md outline-none" 
+                  className="w-full p-2.5 sm:p-3 bg-slate-800/80 border border-slate-600/50 text-slate-100 placeholder:text-slate-500 focus:border-purple-400/30 focus:ring-1 focus:ring-purple-400/10 pr-10 transition-all duration-200 rounded-md outline-none text-sm" 
                 />
                 <button 
                   type="button" 
-                  className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-slate-700/50 text-slate-400 hover:text-slate-300 transition-colors rounded-r-md" 
+                  className="absolute right-0 top-0 h-full px-2.5 sm:px-3 py-2 hover:bg-slate-700/50 text-slate-400 hover:text-slate-300 transition-colors rounded-r-md text-sm" 
                   onClick={() => setShowPassword(!showPassword)}
                 >
                   {showPassword ? "🙈" : "👁️"}
@@ -154,7 +154,7 @@ function AuthForm({ onLogin }: { onLogin: (user: User, token: string) => void })
 
             {!isLogin && (
               <div className="space-y-2">
-                <label htmlFor="confirmPassword" className="text-slate-200 text-sm font-medium">Confirm password</label>
+                <label htmlFor="confirmPassword" className="text-slate-200 text-xs sm:text-sm font-medium">Confirm password</label>
                 <div className="relative">
                   <input 
                     id="confirmPassword" 
@@ -162,11 +162,11 @@ function AuthForm({ onLogin }: { onLogin: (user: User, token: string) => void })
                     value={form.confirmPassword} 
                     onChange={handleChange} 
                     placeholder="Confirm your password" 
-                    className="w-full p-3 bg-slate-800/80 border border-slate-600/50 text-slate-100 placeholder:text-slate-500 focus:border-purple-400/30 focus:ring-1 focus:ring-purple-400/10 pr-10 transition-all duration-200 rounded-md outline-none" 
+                    className="w-full p-2.5 sm:p-3 bg-slate-800/80 border border-slate-600/50 text-slate-100 placeholder:text-slate-500 focus:border-purple-400/30 focus:ring-1 focus:ring-purple-400/10 pr-10 transition-all duration-200 rounded-md outline-none text-sm" 
                   />
                   <button 
                     type="button" 
-                    className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-slate-700/50 text-slate-400 hover:text-slate-300 transition-colors rounded-r-md" 
+                    className="absolute right-0 top-0 h-full px-2.5 sm:px-3 py-2 hover:bg-slate-700/50 text-slate-400 hover:text-slate-300 transition-colors rounded-r-md text-sm" 
                     onClick={() => setShowPassword(!showPassword)}
                   >
                     {showPassword ? "🙈" : "👁️"}
@@ -178,12 +178,12 @@ function AuthForm({ onLogin }: { onLogin: (user: User, token: string) => void })
             <button 
               type="submit" 
               disabled={isLoading} 
-              className="w-full bg-gradient-to-r from-blue-600/90 to-purple-600/90 hover:from-blue-600 hover:to-purple-600 text-white font-medium py-2.5 transition-all duration-200 shadow-lg disabled:opacity-50 disabled:cursor-not-allowed rounded-md"
+              className="w-full bg-gradient-to-r from-blue-600/90 to-purple-600/90 hover:from-blue-600 hover:to-purple-600 text-white font-medium py-2.5 sm:py-3 transition-all duration-200 shadow-lg disabled:opacity-50 disabled:cursor-not-allowed rounded-md text-sm sm:text-base"
             >
               {isLoading ? (
                 <div className="flex items-center justify-center">
                   <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2"></div>
-                  {isLogin ? "Signing in..." : "Creating account..."}
+                  <span className="text-sm sm:text-base">{isLogin ? "Signing in..." : "Creating account..."}</span>
                 </div>
               ) : (
                 isLogin ? "Sign in" : "Create account"
@@ -191,10 +191,10 @@ function AuthForm({ onLogin }: { onLogin: (user: User, token: string) => void })
             </button>
           </form>
 
-          <div className="text-center text-sm pt-4 border-t border-slate-700/50">
+          <div className="text-center text-xs sm:text-sm pt-4 border-t border-slate-700/50">
             <span className="text-slate-400">{isLogin ? "Don't have an account?" : "Already have an account?"}</span>{" "}
             <button 
-              className="text-blue-400/80 hover:text-purple-400/80 font-medium text-sm transition-colors" 
+              className="text-blue-400/80 hover:text-purple-400/80 font-medium text-xs sm:text-sm transition-colors" 
               onClick={() => setIsLogin(!isLogin)}
             >
               {isLogin ? "Sign up" : "Sign in"}
@@ -308,12 +308,12 @@ export default function Home() {
           onLogin={() => setShowAuth(true)}
         />
         
-        <div className="flex-1 flex flex-col px-8 overflow-hidden">
+        <div className="flex-1 flex flex-col px-4 sm:px-6 lg:px-8 overflow-hidden">
           {messages.length === 0 ? (
             <WelcomeScreen />
           ) : (
-            <div ref={chatRef} className="flex-1 overflow-y-auto py-4 space-y-4">
-              <div className="max-w-4xl mx-auto space-y-4">
+            <div ref={chatRef} className="flex-1 overflow-y-auto py-3 sm:py-4 space-y-3 sm:space-y-4">
+              <div className="max-w-4xl mx-auto space-y-3 sm:space-y-4">
                 {messages.map((msg) => (
                   <MessageBubble
                     key={msg.id}
@@ -332,16 +332,17 @@ export default function Home() {
         </div>
 
         {!user && guestSearchesUsed >= 5 && (
-          <div className="px-8 pb-4">
-            <div className="max-w-4xl mx-auto bg-gradient-to-r from-blue-900/20 to-purple-900/20 border border-blue-800/30 rounded-xl p-4 text-center">
-              <p className="text-gray-300 mb-3">
+          <div className="px-4 sm:px-6 lg:px-8 pb-3 sm:pb-4">
+            <div className="max-w-4xl mx-auto bg-gradient-to-r from-blue-900/20 to-purple-900/20 border border-blue-800/30 rounded-lg sm:rounded-xl p-3 sm:p-4 text-center">
+              <p className="text-gray-300 mb-3 text-sm sm:text-base">
                 You've used all 5 guest searches for today! 🔍
               </p>
               <button
                 onClick={() => setShowAuth(true)}
-                className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white px-6 py-2 rounded-lg transition-all duration-200"
+                className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white px-4 sm:px-6 py-2 rounded-lg transition-all duration-200 text-sm sm:text-base"
               >
-                Sign Up for more Daily Searches
+                <span className="hidden sm:inline">Sign Up for more Daily Searches</span>
+                <span className="sm:hidden">Sign Up for More</span>
               </button>
             </div>
           </div>
